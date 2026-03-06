@@ -1,9 +1,435 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grammar Tree Drag Game</title>
+  <style>
+    :root {
+      --card: #ffffff;
+      --ink: #13233a;
+      --accent: #4463ff;
+      --accent-soft: #e5eaff;
+      --ok: #198754;
+      --bad: #cf2a2a;
+      --border: #d9e0f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f7f9ff, #eef3ff);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 22px;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(19, 35, 58, 0.07);
+    }
+
+    h1 { margin: 0 0 8px; font-size: 1.5rem; }
+    .hint { margin: 0; line-height: 1.5; color: #364869; }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .badge {
+      background: var(--accent-soft);
+      color: #2d44b5;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .badge.link-on {
+      background: #dff7ea;
+      color: #15603c;
+    }
+
+    .sentence { font-size: 1.05rem; line-height: 1.5; }
+
+    .word-bank {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 58px;
+      padding: 12px;
+      border: 1px dashed #afbbe0;
+      border-radius: 12px;
+      background: #fbfcff;
+    }
+
+    .word {
+      background: #fff;
+      border: 1px solid #b8c7ff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: grab;
+      font-weight: 600;
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(68, 99, 255, 0.1);
+    }
+
+    .word:active { cursor: grabbing; }
+
+    .zones {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 12px;
+    }
+
+    .zone.verb-cluster {
+      border-style: solid;
+      border-color: #cfd9ff;
+      background: #f8faff;
+    }
+
+    .zone.linked {
+      border-color: #3fbc7a;
+      background: #ecfff5;
+      box-shadow: 0 0 0 2px rgba(63, 188, 122, 0.18);
+    }
+
+    .zone.link-target::after {
+      content: "Tense link active ✨";
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: #0f6b3f;
+      background: #dcfbe9;
+      border: 1px solid #b7f0d1;
+    }
+
+    .zone {
+      border: 2px dashed #b8c7ff;
+      border-radius: 12px;
+      min-height: 130px;
+      padding: 10px;
+      background: #fdfdff;
+      transition: 0.2s ease;
+    }
+
+    .zone.drag-over {
+      border-color: var(--accent);
+      background: #edf1ff;
+      transform: translateY(-2px);
+    }
+
+    .zone h3 { margin: 0 0 8px; font-size: 0.95rem; color: #24375f; }
+    .zone .desc { margin: 0 0 8px; font-size: 0.8rem; color: #5d6f94; }
+
+    .slot {
+      min-height: 58px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-start;
+      border-top: 1px solid #ecf0ff;
+      padding-top: 8px;
+    }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    button {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary { background: var(--accent); color: white; }
+    .ghost { background: #eef3ff; color: #1f368f; }
+
+    .result { min-height: 24px; font-weight: 700; }
+    .ok { color: var(--ok); }
+    .bad { color: var(--bad); }
+  </style>
 </head>
 <body>
-	hii
+  <main class="container">
+    <section class="panel">
+      <h1>Syntax Tree Trainer: Active, Passive, Progressive, Negation</h1>
+      <p class="hint">
+        Drag each word into the correct tree layer: DP-subject, Tense, Auxiliary chain, Negation, Verb head, Affix (-ing/-en/-ed), DP-object, and PP.
+      </p>
+    </section>
+
+    <section class="panel status">
+      <span class="badge" id="roundLabel">Round 1</span>
+      <span class="badge" id="targetLabel">Target: ...</span>
+      <span class="badge" id="scoreLabel">Score: 0 / 0</span>
+      <span class="badge" id="linkLabel">T↔Affix: Inactive</span>
+    </section>
+
+    <section class="panel sentence" id="prompt"></section>
+
+    <section class="panel">
+      <h2>Word Bank</h2>
+      <div id="wordBank" class="word-bank" aria-label="Draggable words"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Grammar Tree Zones</h2>
+      <div class="zones" id="zones"></div>
+    </section>
+
+    <section class="panel controls">
+      <button class="primary" id="checkBtn">Check Answer</button>
+      <button class="ghost" id="resetBtn">Reset Round</button>
+      <button class="ghost" id="nextBtn">Next Round</button>
+      <p class="result" id="result"></p>
+    </section>
+  </main>
+
+  <script>
+    const templates = [
+      {
+        prompt: "ACTIVE · Present Simple: 'The chef cooks the meal.'",
+        target: "Active · Present Simple",
+        words: [
+          { text: "The chef", type: "DP-subj" },
+          { text: "(present)", type: "T" },
+          { text: "cook", type: "V-head" },
+          { text: "-s", type: "Affix" },
+          { text: "the meal", type: "DP-obj" }
+        ]
+      },
+      {
+        prompt: "PASSIVE · Present Simple: 'The meal is cooked by the chef.'",
+        target: "Passive · Present Simple",
+        words: [
+          { text: "The meal", type: "DP-subj" },
+          { text: "(present)", type: "T" },
+          { text: "is", type: "Aux" },
+          { text: "cook", type: "V-head" },
+          { text: "-en", type: "Affix" },
+          { text: "by the chef", type: "PP" }
+        ]
+      },
+      {
+        prompt: "PROGRESSIVE: 'The boy is running.'",
+        target: "Active · Present Progressive",
+        words: [
+          { text: "The boy", type: "DP-subj" },
+          { text: "(present)", type: "T" },
+          { text: "is", type: "Aux" },
+          { text: "run", type: "V-head" },
+          { text: "-ing", type: "Affix" }
+        ]
+      },
+      {
+        prompt: "MULTI-AUX PASSIVE PERFECT: 'It has been eaten.'",
+        target: "Passive · Present Perfect",
+        words: [
+          { text: "It", type: "DP-subj" },
+          { text: "(present)", type: "T" },
+          { text: "has", type: "Aux" },
+          { text: "been", type: "Aux" },
+          { text: "eat", type: "V-head" },
+          { text: "-en", type: "Affix" }
+        ]
+      },
+      {
+        prompt: "NEGATION: 'I did not eat the cake.'",
+        target: "Active · Past Simple with Negation",
+        words: [
+          { text: "I", type: "DP-subj" },
+          { text: "(past)", type: "T" },
+          { text: "did", type: "Aux" },
+          { text: "not", type: "Neg" },
+          { text: "eat", type: "V-head" },
+          { text: "the cake", type: "DP-obj" }
+        ]
+      }
+    ];
+
+    const zoneConfigs = [
+      { id: "DP-subj", title: "DP-subj", desc: "Subject DP / patient in subject position" },
+      { id: "T", title: "T (Tense)", desc: "Present or past tense feature" },
+      { id: "Aux", title: "Aux (Aspect/Voice)", desc: "be / have / do; can hold multiple items" },
+      { id: "Neg", title: "NegP", desc: "Negation element (e.g., not)" },
+      { id: "V-head", title: "V-head", desc: "Verb root / base form" },
+      { id: "Affix", title: "Affix", desc: "-ing / -en / -ed / -s" },
+      { id: "DP-obj", title: "DP-obj", desc: "Object DP in active clauses" },
+      { id: "PP", title: "PP", desc: "By-phrase or other prepositional phrase" }
+    ];
+
+    let round = 0;
+    let correctCount = 0;
+    let totalChecks = 0;
+
+    const promptEl = document.getElementById("prompt");
+    const targetLabel = document.getElementById("targetLabel");
+    const roundLabel = document.getElementById("roundLabel");
+    const scoreLabel = document.getElementById("scoreLabel");
+    const linkLabel = document.getElementById("linkLabel");
+    const wordBank = document.getElementById("wordBank");
+    const zonesEl = document.getElementById("zones");
+    const resultEl = document.getElementById("result");
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function buildZones() {
+      zonesEl.innerHTML = "";
+      for (const zone of zoneConfigs) {
+        const wrapper = document.createElement("article");
+        wrapper.className = "zone";
+        wrapper.dataset.zone = zone.id;
+        if (zone.id === "V-head" || zone.id === "Affix") {
+          wrapper.classList.add("verb-cluster");
+        }
+        wrapper.innerHTML = `
+          <h3>${zone.title}</h3>
+          <p class="desc">${zone.desc}</p>
+          <div class="slot"></div>
+        `;
+
+        wrapper.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          wrapper.classList.add("drag-over");
+        });
+
+        wrapper.addEventListener("dragleave", () => {
+          wrapper.classList.remove("drag-over");
+        });
+
+        wrapper.addEventListener("drop", (event) => {
+          event.preventDefault();
+          wrapper.classList.remove("drag-over");
+          const id = event.dataTransfer.getData("text/plain");
+          const dragged = document.getElementById(id);
+          if (dragged) {
+            wrapper.querySelector(".slot").appendChild(dragged);
+            updateTenseLinkState();
+          }
+        });
+
+        zonesEl.appendChild(wrapper);
+      }
+    }
+
+    function createWordCard(word, idx) {
+      const card = document.createElement("div");
+      card.className = "word";
+      card.draggable = true;
+      card.id = `word-${round}-${idx}`;
+      card.textContent = word.text;
+      card.dataset.type = word.type;
+
+      card.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("text/plain", card.id);
+      });
+
+      card.addEventListener("dblclick", () => {
+        wordBank.appendChild(card);
+        updateTenseLinkState();
+      });
+
+      return card;
+    }
+
+    function loadRound(index) {
+      const template = templates[index];
+      resultEl.textContent = "";
+      resultEl.className = "result";
+
+      promptEl.textContent = template.prompt;
+      targetLabel.textContent = `Target: ${template.target}`;
+      roundLabel.textContent = `Round ${index + 1}`;
+      scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+      linkLabel.textContent = "T↔Affix: Inactive";
+      linkLabel.classList.remove("link-on");
+
+      buildZones();
+      wordBank.innerHTML = "";
+
+      for (const [i, word] of shuffle(template.words).entries()) {
+        wordBank.appendChild(createWordCard(word, i));
+      }
+    }
+
+    function hasWordsInZone(zoneId) {
+      const zone = document.querySelector(`.zone[data-zone="${zoneId}"] .slot`);
+      return zone && zone.children.length > 0;
+    }
+
+    function updateTenseLinkState() {
+      const tZone = document.querySelector('.zone[data-zone="T"]');
+      const affixZone = document.querySelector('.zone[data-zone="Affix"]');
+      if (!tZone || !affixZone) return;
+
+      const active = hasWordsInZone("T") && hasWordsInZone("Affix");
+      tZone.classList.toggle("linked", active);
+      affixZone.classList.toggle("linked", active);
+      affixZone.classList.toggle("link-target", active);
+      linkLabel.textContent = active ? "T↔Affix: Active ✨" : "T↔Affix: Inactive";
+      linkLabel.classList.toggle("link-on", active);
+    }
+
+    function evaluateRound() {
+      const template = templates[round];
+      const cards = [...document.querySelectorAll(".word")];
+
+      if (cards.some((card) => card.parentElement === wordBank)) {
+        resultEl.textContent = "Place all words into zones before checking.";
+        resultEl.className = "result bad";
+        return;
+      }
+
+      let correct = true;
+      for (const card of cards) {
+        const zone = card.closest(".zone");
+        if (!zone || zone.dataset.zone !== card.dataset.type) {
+          correct = false;
+          break;
+        }
+      }
+
+      totalChecks += 1;
+      if (correct) {
+        correctCount += 1;
+        resultEl.textContent = `Correct! ${template.target}`;
+        resultEl.className = "result ok";
+      } else {
+        resultEl.textContent = "Not correct yet. Re-check T, Aux chain, NegP, V-head and Affix placement.";
+        resultEl.className = "result bad";
+      }
+
+      scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+    }
+
+    document.getElementById("checkBtn").addEventListener("click", evaluateRound);
+    document.getElementById("resetBtn").addEventListener("click", () => loadRound(round));
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      round = (round + 1) % templates.length;
+      loadRound(round);
+    });
+
+    loadRound(round);
+  </script>
 </body>
 </html>
