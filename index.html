@@ -60,6 +60,11 @@
       font-size: 0.9rem;
     }
 
+    .badge.link-on {
+      background: #dff7ea;
+      color: #15603c;
+    }
+
     .sentence { font-size: 1.05rem; line-height: 1.5; }
 
     .word-bank {
@@ -90,6 +95,30 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
       gap: 12px;
+    }
+
+    .zone.verb-cluster {
+      border-style: solid;
+      border-color: #cfd9ff;
+      background: #f8faff;
+    }
+
+    .zone.linked {
+      border-color: #3fbc7a;
+      background: #ecfff5;
+      box-shadow: 0 0 0 2px rgba(63, 188, 122, 0.18);
+    }
+
+    .zone.link-target::after {
+      content: "Tense link active ✨";
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: #0f6b3f;
+      background: #dcfbe9;
+      border: 1px solid #b7f0d1;
     }
 
     .zone {
@@ -151,6 +180,7 @@
       <span class="badge" id="roundLabel">Round 1</span>
       <span class="badge" id="targetLabel">Target: ...</span>
       <span class="badge" id="scoreLabel">Score: 0 / 0</span>
+      <span class="badge" id="linkLabel">T↔Affix: Inactive</span>
     </section>
 
     <section class="panel sentence" id="prompt"></section>
@@ -254,6 +284,7 @@
     const targetLabel = document.getElementById("targetLabel");
     const roundLabel = document.getElementById("roundLabel");
     const scoreLabel = document.getElementById("scoreLabel");
+    const linkLabel = document.getElementById("linkLabel");
     const wordBank = document.getElementById("wordBank");
     const zonesEl = document.getElementById("zones");
     const resultEl = document.getElementById("result");
@@ -268,6 +299,9 @@
         const wrapper = document.createElement("article");
         wrapper.className = "zone";
         wrapper.dataset.zone = zone.id;
+        if (zone.id === "V-head" || zone.id === "Affix") {
+          wrapper.classList.add("verb-cluster");
+        }
         wrapper.innerHTML = `
           <h3>${zone.title}</h3>
           <p class="desc">${zone.desc}</p>
@@ -290,6 +324,7 @@
           const dragged = document.getElementById(id);
           if (dragged) {
             wrapper.querySelector(".slot").appendChild(dragged);
+            updateTenseLinkState();
           }
         });
 
@@ -311,6 +346,7 @@
 
       card.addEventListener("dblclick", () => {
         wordBank.appendChild(card);
+        updateTenseLinkState();
       });
 
       return card;
@@ -325,6 +361,8 @@
       targetLabel.textContent = `Target: ${template.target}`;
       roundLabel.textContent = `Round ${index + 1}`;
       scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+      linkLabel.textContent = "T↔Affix: Inactive";
+      linkLabel.classList.remove("link-on");
 
       buildZones();
       wordBank.innerHTML = "";
@@ -332,6 +370,24 @@
       for (const [i, word] of shuffle(template.words).entries()) {
         wordBank.appendChild(createWordCard(word, i));
       }
+    }
+
+    function hasWordsInZone(zoneId) {
+      const zone = document.querySelector(`.zone[data-zone="${zoneId}"] .slot`);
+      return zone && zone.children.length > 0;
+    }
+
+    function updateTenseLinkState() {
+      const tZone = document.querySelector('.zone[data-zone="T"]');
+      const affixZone = document.querySelector('.zone[data-zone="Affix"]');
+      if (!tZone || !affixZone) return;
+
+      const active = hasWordsInZone("T") && hasWordsInZone("Affix");
+      tZone.classList.toggle("linked", active);
+      affixZone.classList.toggle("linked", active);
+      affixZone.classList.toggle("link-target", active);
+      linkLabel.textContent = active ? "T↔Affix: Active ✨" : "T↔Affix: Inactive";
+      linkLabel.classList.toggle("link-on", active);
     }
 
     function evaluateRound() {
