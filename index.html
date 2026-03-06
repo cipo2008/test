@@ -1,9 +1,387 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grammar Tree Drag Game</title>
+  <style>
+    :root {
+      --bg: #f4f7ff;
+      --card: #ffffff;
+      --ink: #13233a;
+      --accent: #4463ff;
+      --accent-soft: #e5eaff;
+      --ok: #198754;
+      --bad: #cf2a2a;
+      --border: #d9e0f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f7f9ff, #eef3ff);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 22px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(19, 35, 58, 0.07);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+    }
+
+    .hint {
+      margin: 0;
+      line-height: 1.5;
+      color: #364869;
+    }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .badge {
+      background: var(--accent-soft);
+      color: #2d44b5;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .sentence {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+
+    .word-bank {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 58px;
+      padding: 12px;
+      border: 1px dashed #afbbe0;
+      border-radius: 12px;
+      background: #fbfcff;
+    }
+
+    .word {
+      background: #fff;
+      border: 1px solid #b8c7ff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: grab;
+      font-weight: 600;
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(68, 99, 255, 0.1);
+    }
+
+    .word:active { cursor: grabbing; }
+
+    .zones {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .zone {
+      border: 2px dashed #b8c7ff;
+      border-radius: 12px;
+      min-height: 120px;
+      padding: 10px;
+      background: #fdfdff;
+      transition: 0.2s ease;
+    }
+
+    .zone.drag-over {
+      border-color: var(--accent);
+      background: #edf1ff;
+      transform: translateY(-2px);
+    }
+
+    .zone h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #24375f;
+    }
+
+    .zone .desc {
+      margin: 0 0 8px;
+      font-size: 0.8rem;
+      color: #5d6f94;
+    }
+
+    .zone .slot {
+      min-height: 58px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-start;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .ghost {
+      background: #eef3ff;
+      color: #1f368f;
+    }
+
+    .result {
+      min-height: 24px;
+      font-weight: 700;
+    }
+
+    .ok { color: var(--ok); }
+    .bad { color: var(--bad); }
+  </style>
 </head>
 <body>
-	hii
+  <main class="container">
+    <section class="panel">
+      <h1>Syntax Tree Trainer: Active & Passive Voice</h1>
+      <p class="hint">
+        Drag each word into the correct phrase category (DP, T/Aux, VP, PP). You can practice both active and passive tense patterns.
+      </p>
+    </section>
+
+    <section class="panel status">
+      <span class="badge" id="roundLabel">Round 1</span>
+      <span class="badge" id="targetLabel">Target: ...</span>
+      <span class="badge" id="scoreLabel">Score: 0 / 0</span>
+    </section>
+
+    <section class="panel sentence" id="prompt"></section>
+
+    <section class="panel">
+      <h2>Word Bank</h2>
+      <div id="wordBank" class="word-bank" aria-label="Draggable words"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Grammar Tree Zones</h2>
+      <div class="zones" id="zones"></div>
+    </section>
+
+    <section class="panel controls">
+      <button class="primary" id="checkBtn">Check Answer</button>
+      <button class="ghost" id="resetBtn">Reset Round</button>
+      <button class="ghost" id="nextBtn">Next Round</button>
+      <p class="result" id="result"></p>
+    </section>
+  </main>
+
+  <script>
+    const templates = [
+      {
+        prompt: "Place words for an ACTIVE sentence: 'The chef cooks the meal.'",
+        target: "Active · Present Simple",
+        words: [
+          { text: "The chef", type: "DP-subj" },
+          { text: "cooks", type: "V" },
+          { text: "the meal", type: "DP-obj" }
+        ]
+      },
+      {
+        prompt: "Place words for a PASSIVE sentence: 'The meal is cooked by the chef.'",
+        target: "Passive · Present Simple",
+        words: [
+          { text: "The meal", type: "DP-subj" },
+          { text: "is", type: "T-Aux" },
+          { text: "cooked", type: "V-part" },
+          { text: "by the chef", type: "PP" }
+        ]
+      },
+      {
+        prompt: "Place words for an ACTIVE sentence: 'The students solved the puzzle.'",
+        target: "Active · Past Simple",
+        words: [
+          { text: "The students", type: "DP-subj" },
+          { text: "solved", type: "V" },
+          { text: "the puzzle", type: "DP-obj" }
+        ]
+      },
+      {
+        prompt: "Place words for a PASSIVE sentence: 'The puzzle was solved by the students.'",
+        target: "Passive · Past Simple",
+        words: [
+          { text: "The puzzle", type: "DP-subj" },
+          { text: "was", type: "T-Aux" },
+          { text: "solved", type: "V-part" },
+          { text: "by the students", type: "PP" }
+        ]
+      }
+    ];
+
+    const zoneConfigs = [
+      { id: "DP-subj", title: "DP (Subject)", desc: "The doer/patient in subject position" },
+      { id: "T-Aux", title: "T / Aux", desc: "Tense and auxiliary (is/was/etc.)" },
+      { id: "V", title: "V (Finite/Main Verb)", desc: "Main finite verb in active voice" },
+      { id: "V-part", title: "V (Past Participle)", desc: "Past participle form for passive" },
+      { id: "DP-obj", title: "DP (Object)", desc: "Object DP in active structures" },
+      { id: "PP", title: "PP", desc: "Optional phrase such as by-phrase" }
+    ];
+
+    let round = 0;
+    let correctCount = 0;
+    let totalChecks = 0;
+
+    const promptEl = document.getElementById("prompt");
+    const targetLabel = document.getElementById("targetLabel");
+    const roundLabel = document.getElementById("roundLabel");
+    const scoreLabel = document.getElementById("scoreLabel");
+    const wordBank = document.getElementById("wordBank");
+    const zonesEl = document.getElementById("zones");
+    const resultEl = document.getElementById("result");
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function buildZones() {
+      zonesEl.innerHTML = "";
+      for (const zone of zoneConfigs) {
+        const wrapper = document.createElement("article");
+        wrapper.className = "zone";
+        wrapper.dataset.zone = zone.id;
+        wrapper.innerHTML = `
+          <h3>${zone.title}</h3>
+          <p class="desc">${zone.desc}</p>
+          <div class="slot"></div>
+        `;
+
+        wrapper.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          wrapper.classList.add("drag-over");
+        });
+
+        wrapper.addEventListener("dragleave", () => {
+          wrapper.classList.remove("drag-over");
+        });
+
+        wrapper.addEventListener("drop", (e) => {
+          e.preventDefault();
+          wrapper.classList.remove("drag-over");
+          const id = e.dataTransfer.getData("text/plain");
+          const dragged = document.getElementById(id);
+          if (dragged) wrapper.querySelector(".slot").appendChild(dragged);
+        });
+
+        zonesEl.appendChild(wrapper);
+      }
+    }
+
+    function createWordCard(word, idx) {
+      const card = document.createElement("div");
+      card.className = "word";
+      card.draggable = true;
+      card.id = `word-${round}-${idx}`;
+      card.textContent = word.text;
+      card.dataset.type = word.type;
+
+      card.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", card.id);
+      });
+
+      return card;
+    }
+
+    function loadRound(index) {
+      const tpl = templates[index];
+      resultEl.textContent = "";
+      resultEl.className = "result";
+
+      promptEl.textContent = tpl.prompt;
+      targetLabel.textContent = `Target: ${tpl.target}`;
+      roundLabel.textContent = `Round ${index + 1}`;
+      scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+
+      buildZones();
+      wordBank.innerHTML = "";
+      for (const [i, word] of shuffle(tpl.words).entries()) {
+        wordBank.appendChild(createWordCard(word, i));
+      }
+    }
+
+    function evaluateRound() {
+      const tpl = templates[round];
+      const placed = [...document.querySelectorAll(".word")];
+
+      if (placed.some((card) => card.parentElement === wordBank)) {
+        resultEl.textContent = "Place all words into zones first.";
+        resultEl.className = "result bad";
+        return;
+      }
+
+      let ok = true;
+      for (const card of placed) {
+        const zone = card.closest(".zone");
+        if (!zone || zone.dataset.zone !== card.dataset.type) {
+          ok = false;
+          break;
+        }
+      }
+
+      totalChecks++;
+      if (ok) {
+        correctCount++;
+        resultEl.textContent = `Correct! This matches ${tpl.target}.`;
+        resultEl.className = "result ok";
+      } else {
+        resultEl.textContent = "Not quite. Check DP, Aux/T, Verb form, and PP placement.";
+        resultEl.className = "result bad";
+      }
+      scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+    }
+
+    document.getElementById("checkBtn").addEventListener("click", evaluateRound);
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      loadRound(round);
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      round = (round + 1) % templates.length;
+      loadRound(round);
+    });
+
+    loadRound(round);
+  </script>
 </body>
 </html>
