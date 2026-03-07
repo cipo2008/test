@@ -67,6 +67,28 @@
 
     .sentence { font-size: 1.05rem; line-height: 1.5; }
 
+    .practice-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .practice-controls select {
+      border: 1px solid #b8c7ff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fff;
+      color: #14244d;
+      font-weight: 600;
+    }
+
+    .mode-tip {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #4d5f88;
+    }
+
     .word-bank {
       display: flex;
       gap: 10px;
@@ -93,7 +115,6 @@
 
     .zones {
       display: grid;
-      /* 稍微加宽了一点点，防止中英文双标题挤压 */
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
     }
@@ -137,7 +158,6 @@
       transform: translateY(-2px);
     }
 
-    /* 标题颜色加深一点，方便看清长标题 */
     .zone h3 { margin: 0 0 6px; font-size: 0.95rem; color: #162441; line-height: 1.3;}
     .zone .desc { margin: 0 0 8px; font-size: 0.75rem; color: #5d6f94; }
 
@@ -174,8 +194,14 @@
     <section class="panel">
       <h1>语法树拆解训练 / Syntax Tree Trainer</h1>
       <p class="hint">
-        请将单词拖入对应的语法区域。现在每个区域都标注了“生成语法(DP/T/V)”与“基础语法(主/谓/宾)”的双重名称，帮助你更好理解句子的底层逻辑！
+        新增“练习选项”模式：可切换主动/被动、情态、未来、条件句、虚拟语气、使役、完成进行、关系从句、倒装等形式。切换模式后，拖放区域会自动改成对应语法格式。
       </p>
+    </section>
+
+    <section class="panel practice-controls">
+      <label for="modeSelect"><strong>练习选项 Practice Mode:</strong></label>
+      <select id="modeSelect" aria-label="Practice mode selector"></select>
+      <p class="mode-tip" id="modeTip"></p>
     </section>
 
     <section class="panel status">
@@ -206,80 +232,272 @@
   </main>
 
   <script>
-    const templates = [
+    const PRACTICE_MODES = [
       {
-        prompt: "ACTIVE · Present Simple: 'The chef cooks the meal.'",
-        target: "Active · Present Simple",
-        words: [
-          { text: "The chef", type: "DP-subj" },
-          { text: "(present)", type: "T" },
-          { text: "cook", type: "V-head" },
-          { text: "-s", type: "Affix" },
-          { text: "the meal", type: "DP-obj" }
+        id: "core",
+        label: "基础：主动/被动与体貌",
+        tip: "经典主动、被动、进行、完成、否定结构。",
+        zones: [
+          { id: "DP-subj", title: "DP-subj (主语 Subject)", desc: "Subject DP" },
+          { id: "T", title: "T (时态 Tense)", desc: "Present / past feature" },
+          { id: "Aux", title: "Aux (助动词)", desc: "be / have / do" },
+          { id: "Neg", title: "NegP (否定)", desc: "not / never" },
+          { id: "V-head", title: "V-head (主动词)", desc: "Verb root" },
+          { id: "Affix", title: "Affix (词缀)", desc: "-s / -ed / -ing / -en" },
+          { id: "DP-obj", title: "DP-obj (宾语)", desc: "Object DP" },
+          { id: "PP", title: "PP (介词短语)", desc: "by-phrase etc." }
+        ],
+        templates: [
+          {
+            prompt: "ACTIVE · Present Simple: 'The chef cooks the meal.'",
+            target: "Active · Present Simple",
+            words: [
+              { text: "The chef", type: "DP-subj" },
+              { text: "(present)", type: "T" },
+              { text: "cook", type: "V-head" },
+              { text: "-s", type: "Affix" },
+              { text: "the meal", type: "DP-obj" }
+            ]
+          },
+          {
+            prompt: "PASSIVE · Present Simple: 'The meal is cooked by the chef.'",
+            target: "Passive · Present Simple",
+            words: [
+              { text: "The meal", type: "DP-subj" },
+              { text: "(present)", type: "T" },
+              { text: "is", type: "Aux" },
+              { text: "cook", type: "V-head" },
+              { text: "-en", type: "Affix" },
+              { text: "by the chef", type: "PP" }
+            ]
+          }
         ]
       },
       {
-        prompt: "PASSIVE · Present Simple: 'The meal is cooked by the chef.'",
-        target: "Passive · Present Simple",
-        words: [
-          { text: "The meal", type: "DP-subj" },
-          { text: "(present)", type: "T" },
-          { text: "is", type: "Aux" },
-          { text: "cook", type: "V-head" },
-          { text: "-en", type: "Affix" },
-          { text: "by the chef", type: "PP" }
+        id: "modal",
+        label: "Modal Verbs (情态动词)",
+        tip: "模板：Active · Modal Present / Active · Modal Perfect",
+        zones: [
+          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
+          { id: "Modal", title: "Modal", desc: "can / should / may" },
+          { id: "Aspect", title: "Aspect", desc: "have (perfect marker)" },
+          { id: "V-head", title: "V-head", desc: "Verb root" },
+          { id: "Complement", title: "Complement", desc: "Object / complement" }
+        ],
+        templates: [
+          {
+            prompt: "She can swim.",
+            target: "Active · Modal Present",
+            words: [
+              { text: "She", type: "DP-subj" },
+              { text: "can", type: "Modal" },
+              { text: "swim", type: "V-head" }
+            ]
+          },
+          {
+            prompt: "She should have called.",
+            target: "Active · Modal Perfect",
+            words: [
+              { text: "She", type: "DP-subj" },
+              { text: "should", type: "Modal" },
+              { text: "have", type: "Aspect" },
+              { text: "call", type: "V-head" },
+              { text: "-ed", type: "Complement" }
+            ]
+          }
         ]
       },
       {
-        prompt: "PROGRESSIVE: 'The boy is running.'",
-        target: "Active · Present Progressive",
-        words: [
-          { text: "The boy", type: "DP-subj" },
-          { text: "(present)", type: "T" },
-          { text: "is", type: "Aux" },
-          { text: "run", type: "V-head" },
-          { text: "-ing", type: "Affix" }
+        id: "future",
+        label: "Future Tenses (未来时态)",
+        tip: "模板：Active · Future Simple / Active · Future Progressive",
+        zones: [
+          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
+          { id: "Future", title: "Future Marker", desc: "will" },
+          { id: "Aux", title: "Aux", desc: "be" },
+          { id: "V-head", title: "V-head", desc: "Verb root" },
+          { id: "Affix", title: "Affix", desc: "-ing etc." }
+        ],
+        templates: [
+          {
+            prompt: "She will eat.",
+            target: "Active · Future Simple",
+            words: [
+              { text: "She", type: "DP-subj" },
+              { text: "will", type: "Future" },
+              { text: "eat", type: "V-head" }
+            ]
+          },
+          {
+            prompt: "She will be eating.",
+            target: "Active · Future Progressive",
+            words: [
+              { text: "She", type: "DP-subj" },
+              { text: "will", type: "Future" },
+              { text: "be", type: "Aux" },
+              { text: "eat", type: "V-head" },
+              { text: "-ing", type: "Affix" }
+            ]
+          }
         ]
       },
       {
-        prompt: "MULTI-AUX PASSIVE PERFECT: 'It has been eaten.'",
-        target: "Passive · Present Perfect",
-        words: [
-          { text: "It", type: "DP-subj" },
-          { text: "(present)", type: "T" },
-          { text: "has", type: "Aux" },
-          { text: "been", type: "Aux" },
-          { text: "eat", type: "V-head" },
-          { text: "-en", type: "Affix" }
+        id: "conditional",
+        label: "Conditional Sentences (条件句)",
+        tip: "模板：Conditional · Present / Conditional · Past",
+        zones: [
+          { id: "If-Clause", title: "If-Clause", desc: "Condition clause" },
+          { id: "Main-Clause", title: "Main-Clause", desc: "Result clause" },
+          { id: "Tense-Marker", title: "Tense Marker", desc: "present / past" }
+        ],
+        templates: [
+          {
+            prompt: "If he studies, he will pass.",
+            target: "Conditional · Present",
+            words: [
+              { text: "If he studies", type: "If-Clause" },
+              { text: "present", type: "Tense-Marker" },
+              { text: "he will pass", type: "Main-Clause" }
+            ]
+          },
+          {
+            prompt: "If he had studied, he would have passed.",
+            target: "Conditional · Past",
+            words: [
+              { text: "If he had studied", type: "If-Clause" },
+              { text: "past perfect", type: "Tense-Marker" },
+              { text: "he would have passed", type: "Main-Clause" }
+            ]
+          }
         ]
       },
       {
-        prompt: "NEGATION: 'I did not eat the cake.'",
-        target: "Active · Past Simple with Negation",
-        words: [
-          { text: "I", type: "DP-subj" },
-          { text: "(past)", type: "T" },
-          { text: "did", type: "Aux" },
-          { text: "not", type: "Neg" },
-          { text: "eat", type: "V-head" },
-          { text: "the cake", type: "DP-obj" }
+        id: "subjunctive",
+        label: "Subjunctive Mood (虚拟语气)",
+        tip: "模板：Subjunctive · Present / Subjunctive · Past",
+        zones: [
+          { id: "Trigger", title: "Trigger", desc: "wish / suggest / demand" },
+          { id: "Subj-Clause", title: "Subjunctive Clause", desc: "counterfactual/proposal" },
+          { id: "Mood", title: "Mood Feature", desc: "present / past subjunctive" }
+        ],
+        templates: [
+          {
+            prompt: "I suggest that he be on time.",
+            target: "Subjunctive · Present",
+            words: [
+              { text: "I suggest", type: "Trigger" },
+              { text: "present subjunctive", type: "Mood" },
+              { text: "that he be on time", type: "Subj-Clause" }
+            ]
+          },
+          {
+            prompt: "I wish she were here.",
+            target: "Subjunctive · Past",
+            words: [
+              { text: "I wish", type: "Trigger" },
+              { text: "past subjunctive", type: "Mood" },
+              { text: "she were here", type: "Subj-Clause" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "causative",
+        label: "Causative Verbs (使役动词)",
+        tip: "模板：Causative · Perfect Passive",
+        zones: [
+          { id: "Agent", title: "Causer", desc: "Subject causing action" },
+          { id: "Causative", title: "Causative Verb", desc: "have / get" },
+          { id: "Theme", title: "Theme/Object", desc: "Affected object" },
+          { id: "PastPart", title: "Past Participle", desc: "washed / repaired" }
+        ],
+        templates: [
+          {
+            prompt: "He had his car washed.",
+            target: "Causative · Perfect Passive",
+            words: [
+              { text: "He", type: "Agent" },
+              { text: "had", type: "Causative" },
+              { text: "his car", type: "Theme" },
+              { text: "washed", type: "PastPart" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "perfect-progressive",
+        label: "Perfect Progressive Tenses (完成进行时)",
+        tip: "模板：Active · Present Perfect Progressive",
+        zones: [
+          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
+          { id: "PerfAux", title: "Perfect Aux", desc: "has/have" },
+          { id: "ProgAux", title: "Progressive Aux", desc: "been" },
+          { id: "V-head", title: "V-head", desc: "Verb root" },
+          { id: "Affix", title: "Affix", desc: "-ing" }
+        ],
+        templates: [
+          {
+            prompt: "She has been reading.",
+            target: "Active · Present Perfect Progressive",
+            words: [
+              { text: "She", type: "DP-subj" },
+              { text: "has", type: "PerfAux" },
+              { text: "been", type: "ProgAux" },
+              { text: "read", type: "V-head" },
+              { text: "-ing", type: "Affix" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "relative",
+        label: "Relative Clauses (关系从句)",
+        tip: "模板：Relative Clause",
+        zones: [
+          { id: "Head-Noun", title: "Head Noun", desc: "Modified noun" },
+          { id: "Rel-Word", title: "Relative Word", desc: "that / who / which" },
+          { id: "Rel-Clause", title: "Relative Clause", desc: "embedded clause" },
+          { id: "Main-Predicate", title: "Main Predicate", desc: "matrix clause" }
+        ],
+        templates: [
+          {
+            prompt: "The book that he bought is interesting.",
+            target: "Relative Clause",
+            words: [
+              { text: "The book", type: "Head-Noun" },
+              { text: "that", type: "Rel-Word" },
+              { text: "he bought", type: "Rel-Clause" },
+              { text: "is interesting", type: "Main-Predicate" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "inversion",
+        label: "Inversion (倒装语序)",
+        tip: "模板：Inversion · Negative",
+        zones: [
+          { id: "Fronted-Neg", title: "Fronted Negative", desc: "Never / Rarely / Seldom" },
+          { id: "Aux", title: "Aux (倒装助动词)", desc: "have / do / can" },
+          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
+          { id: "VP", title: "VP", desc: "Main predicate" }
+        ],
+        templates: [
+          {
+            prompt: "Never have I seen such a beautiful sight.",
+            target: "Inversion · Negative",
+            words: [
+              { text: "Never", type: "Fronted-Neg" },
+              { text: "have", type: "Aux" },
+              { text: "I", type: "DP-subj" },
+              { text: "seen such a beautiful sight", type: "VP" }
+            ]
+          }
         ]
       }
     ];
 
-    // ✅ 修改重点在这里：为每个专业名称补充了通俗的语法名称
-    const zoneConfigs = [
-      { id: "DP-subj", title: "DP-subj (主语 Subject)", desc: "D (Determiner限定词) the + NP (Noun名词 Phrase) boy" },
-      { id: "T", title: "T (时态 Tense)", desc: "Present or past tense feature" },
-      { id: "Aux", title: "Aux (助动词 Helping Verb)", desc: "be / have / do; can hold multiple items" },
-      { id: "Neg", title: "NegP (否定词 Negation)", desc: "Negation element (e.g., not)" },
-      { id: "V-head", title: "V-head (主动词 Main Verb)动词原形", desc: "Verb root / base form" },
-      { id: "Affix", title: "Affix (词缀 Suffix)动词词尾", desc: "-ing / -en / -ed / -s" },
-      { id: "DP-obj", title: "DP-obj (宾语 Object)", desc: "Object DP in active clauses" },
-      { id: "PP", title: "PP (介词短语 Prep. Phrase)", desc: "By-phrase or other prepositional phrase.  P (Preposition) by + DP John. by John/in the park/with a knife/on the table" }
-    ];
-
-
+    let currentModeId = PRACTICE_MODES[0].id;
     let round = 0;
     let correctCount = 0;
     let totalChecks = 0;
@@ -292,18 +510,35 @@
     const wordBank = document.getElementById("wordBank");
     const zonesEl = document.getElementById("zones");
     const resultEl = document.getElementById("result");
+    const modeSelect = document.getElementById("modeSelect");
+    const modeTip = document.getElementById("modeTip");
 
     function shuffle(arr) {
       return [...arr].sort(() => Math.random() - 0.5);
     }
 
-    function buildZones() {
+    function getCurrentMode() {
+      return PRACTICE_MODES.find((mode) => mode.id === currentModeId) || PRACTICE_MODES[0];
+    }
+
+    function buildModeOptions() {
+      modeSelect.innerHTML = "";
+      for (const mode of PRACTICE_MODES) {
+        const option = document.createElement("option");
+        option.value = mode.id;
+        option.textContent = mode.label;
+        modeSelect.appendChild(option);
+      }
+      modeSelect.value = currentModeId;
+    }
+
+    function buildZones(mode) {
       zonesEl.innerHTML = "";
-      for (const zone of zoneConfigs) {
+      for (const zone of mode.zones) {
         const wrapper = document.createElement("article");
         wrapper.className = "zone";
         wrapper.dataset.zone = zone.id;
-        if (zone.id === "V-head" || zone.id === "Affix") {
+        if (zone.id.includes("V") || zone.id === "Affix") {
           wrapper.classList.add("verb-cluster");
         }
         wrapper.innerHTML = `
@@ -340,7 +575,7 @@
       const card = document.createElement("div");
       card.className = "word";
       card.draggable = true;
-      card.id = `word-${round}-${idx}`;
+      card.id = `word-${currentModeId}-${round}-${idx}`;
       card.textContent = word.text;
       card.dataset.type = word.type;
 
@@ -357,23 +592,26 @@
     }
 
     function loadRound(index) {
-      const template = templates[index];
+      const mode = getCurrentMode();
+      const template = mode.templates[index];
       resultEl.textContent = "";
       resultEl.className = "result";
 
       promptEl.textContent = template.prompt;
       targetLabel.textContent = `Target: ${template.target}`;
-      roundLabel.textContent = `Round ${index + 1}`;
+      roundLabel.textContent = `Round ${index + 1} / ${mode.templates.length}`;
       scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
+      modeTip.textContent = mode.tip;
       linkLabel.textContent = "T↔Affix: Inactive";
       linkLabel.classList.remove("link-on");
 
-      buildZones();
+      buildZones(mode);
       wordBank.innerHTML = "";
 
       for (const [i, word] of shuffle(template.words).entries()) {
         wordBank.appendChild(createWordCard(word, i));
       }
+      updateTenseLinkState();
     }
 
     function hasWordsInZone(zoneId) {
@@ -384,7 +622,11 @@
     function updateTenseLinkState() {
       const tZone = document.querySelector('.zone[data-zone="T"]');
       const affixZone = document.querySelector('.zone[data-zone="Affix"]');
-      if (!tZone || !affixZone) return;
+      if (!tZone || !affixZone) {
+        linkLabel.textContent = "T↔Affix: N/A";
+        linkLabel.classList.remove("link-on");
+        return;
+      }
 
       const active = hasWordsInZone("T") && hasWordsInZone("Affix");
       tZone.classList.toggle("linked", active);
@@ -395,7 +637,7 @@
     }
 
     function evaluateRound() {
-      const template = templates[round];
+      const template = getCurrentMode().templates[round];
       const cards = [...document.querySelectorAll(".word")];
 
       if (cards.some((card) => card.parentElement === wordBank)) {
@@ -426,13 +668,21 @@
       scoreLabel.textContent = `Score: ${correctCount} / ${totalChecks}`;
     }
 
-    document.getElementById("checkBtn").addEventListener("click", evaluateRound);
-    document.getElementById("resetBtn").addEventListener("click", () => loadRound(round));
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      round = (round + 1) % templates.length;
+    modeSelect.addEventListener("change", (event) => {
+      currentModeId = event.target.value;
+      round = 0;
       loadRound(round);
     });
 
+    document.getElementById("checkBtn").addEventListener("click", evaluateRound);
+    document.getElementById("resetBtn").addEventListener("click", () => loadRound(round));
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      const total = getCurrentMode().templates.length;
+      round = (round + 1) % total;
+      loadRound(round);
+    });
+
+    buildModeOptions();
     loadRound(round);
   </script>
  </body>
