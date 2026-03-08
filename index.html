@@ -400,6 +400,50 @@
         ]
       },
       {
+        id: "interrogative",
+        label: "Interrogatives (疑问句 / CP结构)",
+        tip: "参考 CP → Spec-CP + C'（C + TP）：陈述句可放空 C（∅），疑问句通常把疑问词放到 Spec-CP、助动词放到 C。",
+        zones: [
+          { id: "Spec-CP", title: "Spec-CP", desc: "疑问词位置 (what / who / where)" },
+          { id: "C", title: "C (Complementizer/Operator)", desc: "that / if / whether / do-support / 助动词" },
+          { id: "TP-Subj", title: "TP: Subject", desc: "句子核心中的主语" },
+          { id: "TP-V", title: "TP: Predicate", desc: "句子核心中的谓语动词" },
+          { id: "TP-Obj", title: "TP: Object/Complement", desc: "句子核心中的宾语/补足语" }
+        ],
+        templates: [
+          {
+            prompt: "DECLARATIVE with null C: 'The boy eats an apple.'",
+            target: "CP structure · Declarative (C = ∅)",
+            words: [
+              { text: "∅ (null C)", type: "C" },
+              { text: "The boy", type: "TP-Subj" },
+              { text: "eats", type: "TP-V" },
+              { text: "an apple", type: "TP-Obj" }
+            ]
+          },
+          {
+            prompt: "WH-QUESTION: 'What does the boy eat?'",
+            target: "CP structure · WH-question",
+            words: [
+              { text: "what", type: "Spec-CP" },
+              { text: "does", type: "C" },
+              { text: "the boy", type: "TP-Subj" },
+              { text: "eat", type: "TP-V" }
+            ]
+          },
+          {
+            prompt: "YES/NO QUESTION: 'Does the boy eat an apple?'",
+            target: "CP structure · Yes/No question",
+            words: [
+              { text: "does", type: "C" },
+              { text: "the boy", type: "TP-Subj" },
+              { text: "eat", type: "TP-V" },
+              { text: "an apple", type: "TP-Obj" }
+            ]
+          }
+        ]
+      },
+      {
         id: "modal",
         label: "Modal Verbs (情态动词)",
         tip: "模板：Active · Modal Present / Active · Modal Perfect",
