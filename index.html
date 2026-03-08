@@ -236,11 +236,15 @@
       {
         id: "core",
         label: "基础：主动/被动与体貌",
-        tip: "经典主动、被动、进行、完成、否定结构。",
+        tip: "将 AUX 精细拆分为 Modal/Perfect/Progressive/Passive/Do，避免多个词混放在同一 AUX 区。",
         zones: [
           { id: "DP-subj", title: "DP-subj (主语 Subject)", desc: "Subject DP" },
           { id: "T", title: "T (时态 Tense)", desc: "Present / past feature" },
-          { id: "Aux", title: "Aux (助动词)", desc: "be / have / do" },
+          { id: "Modal-Aux", title: "Modal Aux (情态)", desc: "will / can / may / must / should / might / could" },
+          { id: "Perfect-Aux", title: "Perfect Aux (完成体)", desc: "have / has / had + 过去分词" },
+          { id: "Progressive-Aux", title: "Progressive Aux (进行体)", desc: "be + V-ing" },
+          { id: "Passive-Aux", title: "Passive Aux (被动)", desc: "be + 过去分词" },
+          { id: "Do-Aux", title: "Do Aux (助动词do)", desc: "do / does / did" },
           { id: "Neg", title: "NegP (否定)", desc: "not / never" },
           { id: "V-head", title: "V-head (主动词)", desc: "Verb root" },
           { id: "Affix", title: "Affix (词缀)", desc: "-s / -ed / -ing / -en" },
@@ -265,10 +269,34 @@
             words: [
               { text: "The meal", type: "DP-subj" },
               { text: "(present)", type: "T" },
-              { text: "is", type: "Aux" },
+              { text: "is", type: "Passive-Aux" },
               { text: "cook", type: "V-head" },
               { text: "-en", type: "Affix" },
               { text: "by the chef", type: "PP" }
+            ]
+          },
+          {
+            prompt: "MULTI-AUX PASSIVE PERFECT: 'It has been eaten.'",
+            target: "Passive · Present Perfect",
+            words: [
+              { text: "It", type: "DP-subj" },
+              { text: "(present)", type: "T" },
+              { text: "has", type: "Perfect-Aux" },
+              { text: "been", type: "Passive-Aux" },
+              { text: "eat", type: "V-head" },
+              { text: "-en", type: "Affix" }
+            ]
+          },
+          {
+            prompt: "NEGATION: 'I did not eat the cake.'",
+            target: "Active · Past Simple with Negation",
+            words: [
+              { text: "I", type: "DP-subj" },
+              { text: "(past)", type: "T" },
+              { text: "did", type: "Do-Aux" },
+              { text: "not", type: "Neg" },
+              { text: "eat", type: "V-head" },
+              { text: "the cake", type: "DP-obj" }
             ]
           }
         ]
@@ -279,8 +307,8 @@
         tip: "模板：Active · Modal Present / Active · Modal Perfect",
         zones: [
           { id: "DP-subj", title: "DP-subj", desc: "Subject" },
-          { id: "Modal", title: "Modal", desc: "can / should / may" },
-          { id: "Aspect", title: "Aspect", desc: "have (perfect marker)" },
+          { id: "Modal-Aux", title: "Modal Aux", desc: "can / should / may" },
+          { id: "Perfect-Aux", title: "Perfect Aux", desc: "have (perfect marker)" },
           { id: "V-head", title: "V-head", desc: "Verb root" },
           { id: "Complement", title: "Complement", desc: "Object / complement" }
         ],
@@ -290,7 +318,7 @@
             target: "Active · Modal Present",
             words: [
               { text: "She", type: "DP-subj" },
-              { text: "can", type: "Modal" },
+              { text: "can", type: "Modal-Aux" },
               { text: "swim", type: "V-head" }
             ]
           },
@@ -299,8 +327,8 @@
             target: "Active · Modal Perfect",
             words: [
               { text: "She", type: "DP-subj" },
-              { text: "should", type: "Modal" },
-              { text: "have", type: "Aspect" },
+              { text: "should", type: "Modal-Aux" },
+              { text: "have", type: "Perfect-Aux" },
               { text: "call", type: "V-head" },
               { text: "-ed", type: "Complement" }
             ]
@@ -313,8 +341,8 @@
         tip: "模板：Active · Future Simple / Active · Future Progressive",
         zones: [
           { id: "DP-subj", title: "DP-subj", desc: "Subject" },
-          { id: "Future", title: "Future Marker", desc: "will" },
-          { id: "Aux", title: "Aux", desc: "be" },
+          { id: "Modal-Aux", title: "Modal Aux (Future)", desc: "will" },
+          { id: "Progressive-Aux", title: "Progressive Aux", desc: "be" },
           { id: "V-head", title: "V-head", desc: "Verb root" },
           { id: "Affix", title: "Affix", desc: "-ing etc." }
         ],
@@ -324,7 +352,7 @@
             target: "Active · Future Simple",
             words: [
               { text: "She", type: "DP-subj" },
-              { text: "will", type: "Future" },
+              { text: "will", type: "Modal-Aux" },
               { text: "eat", type: "V-head" }
             ]
           },
@@ -333,8 +361,8 @@
             target: "Active · Future Progressive",
             words: [
               { text: "She", type: "DP-subj" },
-              { text: "will", type: "Future" },
-              { text: "be", type: "Aux" },
+              { text: "will", type: "Modal-Aux" },
+              { text: "be", type: "Progressive-Aux" },
               { text: "eat", type: "V-head" },
               { text: "-ing", type: "Affix" }
             ]
@@ -478,7 +506,7 @@
         tip: "模板：Inversion · Negative",
         zones: [
           { id: "Fronted-Neg", title: "Fronted Negative", desc: "Never / Rarely / Seldom" },
-          { id: "Aux", title: "Aux (倒装助动词)", desc: "have / do / can" },
+          { id: "Modal-Aux", title: "Modal/Operator Aux (倒装助动词)", desc: "have / do / can" },
           { id: "DP-subj", title: "DP-subj", desc: "Subject" },
           { id: "VP", title: "VP", desc: "Main predicate" }
         ],
@@ -488,7 +516,7 @@
             target: "Inversion · Negative",
             words: [
               { text: "Never", type: "Fronted-Neg" },
-              { text: "have", type: "Aux" },
+              { text: "have", type: "Modal-Aux" },
               { text: "I", type: "DP-subj" },
               { text: "seen such a beautiful sight", type: "VP" }
             ]
