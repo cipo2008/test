@@ -281,7 +281,7 @@
     <section class="panel" style="display: none;">
       <h3>语法树拆解训练 / Syntax Tree Trainer</h3>
       <p class="hint">
-        新增“练习选项”模式：可切换主动/被动、情态、未来、条件句、虚拟语气、使役、完成进行、关系从句、倒装等形式。切换模式后，拖放区域会自动改成对应语法格式；并将 T 与 AUX 作为一个组合父框展示，V-head/Affix
+        新增“练习选项”模式：可切换主动/被动、情态、未来、条件句、虚拟语气、使役、完成进行、四类从句（名词性/定语/状语/表语）、倒装等形式。切换模式后，拖放区域会自动改成对应语法格式；并将 T 与 AUX 作为一个组合父框展示，V-head/Affix
         也会成组显示。
       </p>
     </section>
@@ -640,24 +640,161 @@
         ]
       },
       {
-        id: "relative",
-        label: "Relative Clauses (关系从句)",
-        tip: "模板：Relative Clause",
+        id: "clauses",
+        label: "Clauses (四类从句)",
+        tip: "语法结构区按句子顺序：句首成分 → 连接词 → 从句内容 → 句尾成分",
         zones: [
-          { id: "Head-Noun", title: "Head Noun", desc: "Modified noun" },
-          { id: "Rel-Word", title: "Relative Word", desc: "that / who / which" },
-          { id: "Rel-Clause", title: "Relative Clause", desc: "embedded clause" },
-          { id: "Main-Predicate", title: "Main Predicate", desc: "matrix clause" }
+          { id: "Lead-Part", title: "Lead Part (句首成分)", desc: "Sentence-initial matrix/head part" },
+          { id: "Connector", title: "Connector (连接词)", desc: "what / that / when / whether ..." },
+          { id: "Sub-Clause", title: "Subordinate Clause (从句内容)", desc: "embedded clause content" },
+          { id: "Tail-Part", title: "Tail Part (句尾成分)", desc: "Sentence-final matrix/predicate part" }
         ],
         templates: [
           {
-            prompt: "The book that he bought is interesting.",
-            target: "Relative Clause",
+            prompt: "What you said is important.",
+            target: "Noun Clause (名词性从句)",
             words: [
-              { text: "The book", type: "Head-Noun" },
-              { text: "that", type: "Rel-Word" },
-              { text: "he bought", type: "Rel-Clause" },
-              { text: "is interesting", type: "Main-Predicate" }
+              { text: "what", type: "Connector" },
+              { text: "you said", type: "Sub-Clause" },
+              { text: "is important", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "The book that he bought is interesting.",
+            target: "Relative Clause (定语从句)",
+            words: [
+              { text: "The book", type: "Lead-Part" },
+              { text: "that", type: "Connector" },
+              { text: "he bought", type: "Sub-Clause" },
+              { text: "is interesting", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "I will call you when I arrive.",
+            target: "Adverbial Clause (状语从句)",
+            words: [
+              { text: "I will call you", type: "Lead-Part" },
+              { text: "when", type: "Connector" },
+              { text: "I arrive", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "The problem is whether we can finish it in time.",
+            target: "Complement Clause (表语从句)",
+            words: [
+              { text: "The problem is", type: "Lead-Part" },
+              { text: "whether", type: "Connector" },
+              { text: "we can finish it in time", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "What he did surprised everyone.",
+            target: "Noun Clause (名词性从句)",
+            words: [
+              { text: "what", type: "Connector" },
+              { text: "he did", type: "Sub-Clause" },
+              { text: "surprised everyone", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "I know what you did.",
+            target: "Noun Clause (名词性从句)",
+            words: [
+              { text: "I know", type: "Lead-Part" },
+              { text: "what", type: "Connector" },
+              { text: "you did", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "She doesn't understand why he left.",
+            target: "Noun Clause (名词性从句)",
+            words: [
+              { text: "She doesn't understand", type: "Lead-Part" },
+              { text: "why", type: "Connector" },
+              { text: "he left", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "The person who called you is my friend.",
+            target: "Relative Clause (定语从句)",
+            words: [
+              { text: "The person", type: "Lead-Part" },
+              { text: "who", type: "Connector" },
+              { text: "called you", type: "Sub-Clause" },
+              { text: "is my friend", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "The movie which we watched last night was amazing.",
+            target: "Relative Clause (定语从句)",
+            words: [
+              { text: "The movie", type: "Lead-Part" },
+              { text: "which", type: "Connector" },
+              { text: "we watched last night", type: "Sub-Clause" },
+              { text: "was amazing", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "I met a teacher that inspires students.",
+            target: "Relative Clause (定语从句)",
+            words: [
+              { text: "I met a teacher", type: "Lead-Part" },
+              { text: "that", type: "Connector" },
+              { text: "inspires students", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "She cried because she was sad.",
+            target: "Adverbial Clause (状语从句)",
+            words: [
+              { text: "She cried", type: "Lead-Part" },
+              { text: "because", type: "Connector" },
+              { text: "she was sad", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "If it rains, we will stay inside.",
+            target: "Adverbial Clause (状语从句)",
+            words: [
+              { text: "if", type: "Connector" },
+              { text: "it rains", type: "Sub-Clause" },
+              { text: "we will stay inside", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "Although he was tired, he kept working.",
+            target: "Adverbial Clause (状语从句)",
+            words: [
+              { text: "although", type: "Connector" },
+              { text: "he was tired", type: "Sub-Clause" },
+              { text: "he kept working", type: "Tail-Part" }
+            ]
+          },
+          {
+            prompt: "The truth is that he lied.",
+            target: "Complement Clause (表语从句)",
+            words: [
+              { text: "The truth is", type: "Lead-Part" },
+              { text: "that", type: "Connector" },
+              { text: "he lied", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "My concern is whether they agree.",
+            target: "Complement Clause (表语从句)",
+            words: [
+              { text: "My concern is", type: "Lead-Part" },
+              { text: "whether", type: "Connector" },
+              { text: "they agree", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "The question is what we should do next.",
+            target: "Complement Clause (表语从句)",
+            words: [
+              { text: "The question is", type: "Lead-Part" },
+              { text: "what", type: "Connector" },
+              { text: "we should do next", type: "Sub-Clause" }
             ]
           }
         ]
