@@ -446,33 +446,58 @@
       {
         id: "modal",
         label: "Modal Verbs (情态动词)",
-        tip: "模板：Active · Modal Present / Active · Modal Perfect",
+        tip: "采用基础结构区配置，支持更多复杂的情态动词时态。模板：情态完成时 / 情态进行时 / 情态被动语态",
         zones: [
-          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
-          { id: "Modal-Aux", title: "Modal Aux", desc: "can / should / may" },
-          { id: "Perfect-Aux", title: "Perfect Aux", desc: "have (perfect marker)" },
-          { id: "V-head", title: "V-head", desc: "Verb root" },
-          { id: "Complement", title: "Complement", desc: "Object / complement" }
+          { id: "DP-subj", title: "DP-subj (主语 Subject)", desc: "Subject DP" },
+          { id: "T", title: "T (时态 Tense)", desc: "Present / past feature" },
+          { id: "Modal-Aux", title: "Modal Aux (情态)", desc: "can / could / should / may / must" },
+          { id: "Perfect-Aux", title: "Perfect Aux (完成体)", desc: "have (完成时的辅助动词)" },
+          { id: "Progressive-Aux", title: "Progressive Aux (进行体)", desc: "be (进行时的辅助动词)" },
+          { id: "Passive-Aux", title: "Passive Aux (被动)", desc: "be (被动语态的辅助动词)" },
+          { id: "V-head", title: "V-head (主动词)", desc: "Verb root" },
+          { id: "Affix", title: "Affix (词缀)", desc: "-ing / -ed / -en" },
+          { id: "DP-obj", title: "DP-obj (宾语)", desc: "Object DP" },
+          { id: "AdvP", title: "AdvP (副词短语)", desc: "harder / carefully / easily" },
+          { id: "PP", title: "PP (介词短语)", desc: "by tomorrow / by the manager etc." }
         ],
         templates: [
           {
-            prompt: "She can swim.",
-            target: "Active · Modal Present",
+            prompt: "MODAL PERFECT (情态完成时): 'You should have studied harder.'",
+            target: "Active · Modal Perfect",
             words: [
-              { text: "She", type: "DP-subj" },
-              { text: "can", type: "Modal-Aux" },
-              { text: "swim", type: "V-head" }
+              { text: "You", type: "DP-subj" },
+              { text: "(past)", type: "T" },
+              { text: "should", type: "Modal-Aux" },
+              { text: "have", type: "Perfect-Aux" },
+              { text: "study", type: "V-head" },
+              { text: "-ed", type: "Affix" },
+              { text: "harder", type: "AdvP" }
             ]
           },
           {
-            prompt: "She should have called.",
-            target: "Active · Modal Perfect",
+            prompt: "MODAL PROGRESSIVE (情态进行时): 'You should be listening carefully.'",
+            target: "Active · Modal Progressive",
             words: [
-              { text: "She", type: "DP-subj" },
+              { text: "You", type: "DP-subj" },
+              { text: "(present)", type: "T" },
               { text: "should", type: "Modal-Aux" },
-              { text: "have", type: "Perfect-Aux" },
-              { text: "call", type: "V-head" },
-              { text: "-ed", type: "Complement" }
+              { text: "be", type: "Progressive-Aux" },
+              { text: "listen", type: "V-head" },
+              { text: "-ing", type: "Affix" },
+              { text: "carefully", type: "AdvP" }
+            ]
+          },
+          {
+            prompt: "MODAL PASSIVE (情态被动语态): 'The report should be completed by tomorrow.'",
+            target: "Passive · Modal Present",
+            words: [
+              { text: "The report", type: "DP-subj" },
+              { text: "(present)", type: "T" },
+              { text: "should", type: "Modal-Aux" },
+              { text: "be", type: "Passive-Aux" },
+              { text: "complete", type: "V-head" },
+              { text: "-ed", type: "Affix" },
+              { text: "by tomorrow", type: "PP" }
             ]
           }
         ]
@@ -480,33 +505,53 @@
       {
         id: "future",
         label: "Future Tenses (未来时态)",
-        tip: "模板：Active · Future Simple / Active · Future Progressive",
+        tip: "采用基础结构区配置，支持更多复杂的将来时态。模板：将来进行时 / 将来完成时 / 将来被动时",
         zones: [
-          { id: "DP-subj", title: "DP-subj", desc: "Subject" },
-          { id: "Modal-Aux", title: "Modal Aux (Future)", desc: "will" },
-          { id: "Progressive-Aux", title: "Progressive Aux", desc: "be" },
-          { id: "V-head", title: "V-head", desc: "Verb root" },
-          { id: "Affix", title: "Affix", desc: "-ing etc." }
+          { id: "DP-subj", title: "DP-subj (主语 Subject)", desc: "Subject DP" },
+          { id: "T", title: "T (时态 Tense)", desc: "will (表示将来时)" },
+          { id: "Perfect-Aux", title: "Perfect Aux (完成体)", desc: "have (完成时的辅助动词)" },
+          { id: "Progressive-Aux", title: "Progressive Aux (进行体)", desc: "be (进行时的辅助动词)" },
+          { id: "Passive-Aux", title: "Passive Aux (被动)", desc: "be (被动语态的辅助动词)" },
+          { id: "V-head", title: "V-head (主动词)", desc: "Verb root" },
+          { id: "Affix", title: "Affix (词缀)", desc: "-ing / -ed / -en / -d" },
+          { id: "DP-obj", title: "DP-obj (宾语)", desc: "Object DP" },
+          { id: "PP", title: "PP (介词短语)", desc: "by tomorrow / at 8 PM etc." }
         ],
         templates: [
           {
-            prompt: "She will eat.",
-            target: "Active · Future Simple",
+            prompt: "FUTURE PROGRESSIVE (将来进行时): 'I will be studying at 8 PM.'",
+            target: "Active · Future Progressive",
             words: [
-              { text: "She", type: "DP-subj" },
-              { text: "will", type: "Modal-Aux" },
-              { text: "eat", type: "V-head" }
+              { text: "I", type: "DP-subj" },
+              { text: "will", type: "T" },
+              { text: "be", type: "Progressive-Aux" },
+              { text: "study", type: "V-head" },
+              { text: "-ing", type: "Affix" },
+              { text: "at 8 PM", type: "PP" }
             ]
           },
           {
-            prompt: "She will be eating.",
-            target: "Active · Future Progressive",
+            prompt: "FUTURE PERFECT (将来完成时): 'By next year, I will have graduated.'",
+            target: "Active · Future Perfect",
             words: [
-              { text: "She", type: "DP-subj" },
-              { text: "will", type: "Modal-Aux" },
-              { text: "be", type: "Progressive-Aux" },
-              { text: "eat", type: "V-head" },
-              { text: "-ing", type: "Affix" }
+              { text: "By next year", type: "PP" },
+              { text: "I", type: "DP-subj" },
+              { text: "will", type: "T" },
+              { text: "have", type: "Perfect-Aux" },
+              { text: "graduate", type: "V-head" },
+              { text: "-d", type: "Affix" }
+            ]
+          },
+          {
+            prompt: "FUTURE PASSIVE (将来被动时): 'The report will be finished by tomorrow.'",
+            target: "Passive · Future Simple",
+            words: [
+              { text: "The report", type: "DP-subj" },
+              { text: "will", type: "T" },
+              { text: "be", type: "Passive-Aux" },
+              { text: "finish", type: "V-head" },
+              { text: "-ed", type: "Affix" },
+              { text: "by tomorrow", type: "PP" }
             ]
           }
         ]
