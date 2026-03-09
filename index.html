@@ -642,40 +642,38 @@
       {
         id: "clauses",
         label: "Clauses (四类从句)",
-        tip: "模板：名词性从句 / 定语从句 / 状语从句 / 表语从句",
+        tip: "语法结构区按句子顺序：句首成分 → 连接词 → 从句内容 → 句尾成分",
         zones: [
-          { id: "Clause-Type", title: "Clause Type", desc: "Noun / Relative / Adverbial / Complement" },
-          { id: "Matrix-Part", title: "Matrix Part", desc: "Main clause frame" },
-          { id: "Connector", title: "Connector", desc: "what / that / when / whether ..." },
-          { id: "Sub-Clause", title: "Subordinate Clause", desc: "embedded clause content" }
+          { id: "Lead-Part", title: "Lead Part (句首成分)", desc: "Sentence-initial matrix/head part" },
+          { id: "Connector", title: "Connector (连接词)", desc: "what / that / when / whether ..." },
+          { id: "Sub-Clause", title: "Subordinate Clause (从句内容)", desc: "embedded clause content" },
+          { id: "Tail-Part", title: "Tail Part (句尾成分)", desc: "Sentence-final matrix/predicate part" }
         ],
         templates: [
           {
             prompt: "What you said is important.",
             target: "Noun Clause (名词性从句)",
             words: [
-              { text: "Noun Clause", type: "Clause-Type" },
-              { text: "is important", type: "Matrix-Part" },
               { text: "what", type: "Connector" },
-              { text: "you said", type: "Sub-Clause" }
+              { text: "you said", type: "Sub-Clause" },
+              { text: "is important", type: "Tail-Part" }
             ]
           },
           {
             prompt: "The book that he bought is interesting.",
             target: "Relative Clause (定语从句)",
             words: [
-              { text: "Relative Clause", type: "Clause-Type" },
-              { text: "The book is interesting", type: "Matrix-Part" },
+              { text: "The book", type: "Lead-Part" },
               { text: "that", type: "Connector" },
-              { text: "he bought", type: "Sub-Clause" }
+              { text: "he bought", type: "Sub-Clause" },
+              { text: "is interesting", type: "Tail-Part" }
             ]
           },
           {
             prompt: "I will call you when I arrive.",
             target: "Adverbial Clause (状语从句)",
             words: [
-              { text: "Adverbial Clause", type: "Clause-Type" },
-              { text: "I will call you", type: "Matrix-Part" },
+              { text: "I will call you", type: "Lead-Part" },
               { text: "when", type: "Connector" },
               { text: "I arrive", type: "Sub-Clause" }
             ]
@@ -684,8 +682,7 @@
             prompt: "The problem is whether we can finish it in time.",
             target: "Complement Clause (表语从句)",
             words: [
-              { text: "Complement Clause", type: "Clause-Type" },
-              { text: "The problem is", type: "Matrix-Part" },
+              { text: "The problem is", type: "Lead-Part" },
               { text: "whether", type: "Connector" },
               { text: "we can finish it in time", type: "Sub-Clause" }
             ]
