@@ -281,7 +281,7 @@
     <section class="panel" style="display: none;">
       <h3>语法树拆解训练 / Syntax Tree Trainer</h3>
       <p class="hint">
-        新增“练习选项”模式：可切换主动/被动、情态、未来、条件句、虚拟语气、使役、完成进行、关系从句、倒装等形式。切换模式后，拖放区域会自动改成对应语法格式；并将 T 与 AUX 作为一个组合父框展示，V-head/Affix
+        新增“练习选项”模式：可切换主动/被动、情态、未来、条件句、虚拟语气、使役、完成进行、四类从句（名词性/定语/状语/表语）、倒装等形式。切换模式后，拖放区域会自动改成对应语法格式；并将 T 与 AUX 作为一个组合父框展示，V-head/Affix
         也会成组显示。
       </p>
     </section>
@@ -640,24 +640,54 @@
         ]
       },
       {
-        id: "relative",
-        label: "Relative Clauses (关系从句)",
-        tip: "模板：Relative Clause",
+        id: "clauses",
+        label: "Clauses (四类从句)",
+        tip: "模板：名词性从句 / 定语从句 / 状语从句 / 表语从句",
         zones: [
-          { id: "Head-Noun", title: "Head Noun", desc: "Modified noun" },
-          { id: "Rel-Word", title: "Relative Word", desc: "that / who / which" },
-          { id: "Rel-Clause", title: "Relative Clause", desc: "embedded clause" },
-          { id: "Main-Predicate", title: "Main Predicate", desc: "matrix clause" }
+          { id: "Clause-Type", title: "Clause Type", desc: "Noun / Relative / Adverbial / Complement" },
+          { id: "Matrix-Part", title: "Matrix Part", desc: "Main clause frame" },
+          { id: "Connector", title: "Connector", desc: "what / that / when / whether ..." },
+          { id: "Sub-Clause", title: "Subordinate Clause", desc: "embedded clause content" }
         ],
         templates: [
           {
-            prompt: "The book that he bought is interesting.",
-            target: "Relative Clause",
+            prompt: "What you said is important.",
+            target: "Noun Clause (名词性从句)",
             words: [
-              { text: "The book", type: "Head-Noun" },
-              { text: "that", type: "Rel-Word" },
-              { text: "he bought", type: "Rel-Clause" },
-              { text: "is interesting", type: "Main-Predicate" }
+              { text: "Noun Clause", type: "Clause-Type" },
+              { text: "is important", type: "Matrix-Part" },
+              { text: "what", type: "Connector" },
+              { text: "you said", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "The book that he bought is interesting.",
+            target: "Relative Clause (定语从句)",
+            words: [
+              { text: "Relative Clause", type: "Clause-Type" },
+              { text: "The book is interesting", type: "Matrix-Part" },
+              { text: "that", type: "Connector" },
+              { text: "he bought", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "I will call you when I arrive.",
+            target: "Adverbial Clause (状语从句)",
+            words: [
+              { text: "Adverbial Clause", type: "Clause-Type" },
+              { text: "I will call you", type: "Matrix-Part" },
+              { text: "when", type: "Connector" },
+              { text: "I arrive", type: "Sub-Clause" }
+            ]
+          },
+          {
+            prompt: "The problem is whether we can finish it in time.",
+            target: "Complement Clause (表语从句)",
+            words: [
+              { text: "Complement Clause", type: "Clause-Type" },
+              { text: "The problem is", type: "Matrix-Part" },
+              { text: "whether", type: "Connector" },
+              { text: "we can finish it in time", type: "Sub-Clause" }
             ]
           }
         ]
